@@ -44,6 +44,7 @@ public class SecurityConfig {
                     request.requestMatchers("/base/**").permitAll();
                     request.requestMatchers("/assets/**").permitAll();
                     request.requestMatchers("/super").permitAll();
+                    request.requestMatchers("/xyz/authenticate").permitAll();
                     request.requestMatchers("/rest/**").hasAnyRole("SUPER_ADMIN", "ADMIN");
                     request.anyRequest().authenticated();
                 })
