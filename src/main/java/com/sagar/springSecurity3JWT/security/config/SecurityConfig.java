@@ -1,6 +1,7 @@
 package com.sagar.springSecurity3JWT.security.config;
 
 import com.sagar.springSecurity3JWT.security.filter.JwtAuthFilter;
+import com.sagar.springSecurity3JWT.security.repository.UserInfoRepository;
 import com.sagar.springSecurity3JWT.security.service.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -25,24 +26,23 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity()
 public class SecurityConfig {
 
-    private final CustomUserDetailService customUserDetailService;
     private final JwtAuthFilter jwtAuthFilter;
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        return customUserDetailService;
+    public UserDetailsService userDetailsService(UserInfoRepository userInfoRepository) {
+        return new CustomUserDetailService(userInfoRepository);
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(UserInfoRepository userInfoRepository) {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService());
+        daoAuthenticationProvider.setUserDetailsService(userDetailsService(userInfoRepository));
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         return daoAuthenticationProvider;
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserInfoRepository userInfoRepository) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> {
                     request.requestMatchers("/base/**").permitAll();
@@ -53,7 +53,7 @@ public class SecurityConfig {
                     request.anyRequest().authenticated();
                 })
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
+                .authenticationProvider(authenticationProvider(userInfoRepository))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class).build();
     }
 
